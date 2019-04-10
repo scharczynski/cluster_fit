@@ -85,36 +85,36 @@ def run_script(cell_range):
     # pipeline.fit_all_models(solver_params=solver_params)
     # pipeline.compare_models("Const", "Time", 0.01)
 
-    path_to_data = "/Users/stevecharczynski/workspace/data/salz"
-    # path_to_data = "/projectnb/ecog-eeg/stevechar/data/salz"
-    time_info = [1000, 21000]
-    data_processor = DataProcessor(
-        path_to_data, cell_range, time_info=time_info)
-    n = 2
-    mean_delta = 0.10 * (time_info[1] - time_info[0])
-    mean_bounds = (
-        (time_info[0] - mean_delta),
-        (time_info[1] + mean_delta))
-    solver_params = {
-        "niter": 200,
-        "stepsize": 1000,
-        "interval": 10,
-        "method": "TNC",
-        "use_jac": True,
-    }
-    bounds = {
-        "a_1": [0, 1 / n],
-        "ut": [mean_bounds[0], mean_bounds[1]],
-        "st": [10, 50000],
-        "a_0": [10**-10, 1 / n]
-    }
-    bounds_c = {"a_0": [10**-10, 0.999]}
-    pipeline = AnalysisPipeline(cell_range, data_processor, [
-                                "Const", "Time"], 0)
-    pipeline.set_model_bounds("Time", bounds)
-    pipeline.set_model_bounds("Const", bounds_c)
-    pipeline.fit_all_models(solver_params)
-    pipeline.compare_models("Const", "Time", 0.01)
+    # path_to_data = "/Users/stevecharczynski/workspace/data/salz"
+    # # path_to_data = "/projectnb/ecog-eeg/stevechar/data/salz"
+    # time_info = [1000, 21000]
+    # data_processor = DataProcessor(
+    #     path_to_data, cell_range, time_info=time_info)
+    # n = 2
+    # mean_delta = 0.10 * (time_info[1] - time_info[0])
+    # mean_bounds = (
+    #     (time_info[0] - mean_delta),
+    #     (time_info[1] + mean_delta))
+    # solver_params = {
+    #     "niter": 200,
+    #     "stepsize": 1000,
+    #     "interval": 10,
+    #     "method": "TNC",
+    #     "use_jac": True,
+    # }
+    # bounds = {
+    #     "a_1": [0, 1 / n],
+    #     "ut": [mean_bounds[0], mean_bounds[1]],
+    #     "st": [10, 50000],
+    #     "a_0": [10**-10, 1 / n]
+    # }
+    # bounds_c = {"a_0": [10**-10, 0.999]}
+    # pipeline = AnalysisPipeline(cell_range, data_processor, [
+    #                             "Const", "Time"], 0)
+    # pipeline.set_model_bounds("Time", bounds)
+    # pipeline.set_model_bounds("Const", bounds_c)
+    # pipeline.fit_all_models(solver_params)
+    # pipeline.compare_models("Const", "Time", 0.01)
 
     # path_to_data = "/Users/stevecharczynski/workspace/data/cromer"
     # # path_to_data = '/projectnb/ecog-eeg/stevechar/data/cromer'
@@ -290,51 +290,57 @@ def run_script(cell_range):
     # util.collect_data(cell_range, "cell_fits")
 
 
-    # path_to_data = "/Users/stevecharczynski/workspace/data/sheehan/lin_track_s1"
-    # # path_to_data =  "/projectnb/ecog-eeg/stevechar/data/cromer"
-    # time_info = [0, 3993]
-    # data_processor = DataProcessor(
-    #     path_to_data, cell_range, time_info=time_info)
-    # n_t = 2.
-    # solver_params = {
-    #     "niter": 10,
-    #     "stepsize": 1000,
-    #     "interval": 10,
-    #     "method": "TNC",
-    #     "use_jac": False,
-    # }
-    # bounds = {
-    #     "a_1": [10**-10, 1 / n_t],
-    #     "ut": [0., 2400.],
-    #     "st": [10., 5000.],
-    #     "a_0": [10**-10, 1 / n_t]
-    # }
-    # bounds_p = {
-    #     "a_1": [10**-10, 1 / n_t],
-    #     "ut": [0., 2400.],
-    #     "st": [10., 5000.],
-    #     "a_0": [10**-10, 1 / n_t]
-    # }
-    # pipeline = AnalysisPipeline(cell_range, data_processor, [
-    #                              "AbsPosVariable","TimeVariableLength"], 0)
+    path_to_data = "/Users/stevecharczynski/workspace/data/sheehan/lin_track_s1"
+    # path_to_data =  "/projectnb/ecog-eeg/stevechar/data/cromer"
+    time_info = [0, 3993]
+    data_processor = DataProcessor(
+        path_to_data, cell_range, time_info=time_info)
+    n_t = 2.
+    solver_params = {
+        "niter": 10,
+        "stepsize": 100,
+        "interval": 10,
+        "method": "TNC",
+        "use_jac": True,
+    }
+    bounds_pos = {
+        "a_1": [10**-10, 1 / n_t],
+        "ut": [0., 1100.],
+        "st": [10., 2000.],
+        "a_0": [10**-10, 1 / n_t]
+    }
+    bounds_t = {
+        "a_1": [10**-10, 1 / n_t],
+        "ut": [0., 2400.],
+        "st": [10., 5000.],
+        "a_0": [10**-10, 1 / n_t]
+    }
+    pipeline = AnalysisPipeline(cell_range, data_processor, [
+                               "Const", "RelPosVariable","AbsPosVariable","TimeVariableLength"], 0)
 
-    # pipeline.set_model_bounds("TimeVariableLength", bounds)
-    # pipeline.set_model_bounds("AbsPosVariable", bounds_p)
-    # with open("/Users/stevecharczynski/workspace/data/sheehan/lin_track_s1/trial_length.json", 'rb') as f:
-    #     trial_length = json.load(f)
-    # pipeline.set_model_info("TimeVariableLength", "trial_length", trial_length)
-    # pipeline.set_model_info("AbsPosVariable", "trial_length", trial_length)
-    # with open("/Users/stevecharczynski/workspace/data/sheehan/lin_track_s1/x_abs.json", 'rb') as f:
-    #     abs_pos = np.array(json.load(f))
-    # with open("/Users/stevecharczynski/workspace/data/sheehan/lin_track_s1/x_rel.json", 'rb') as f:
-    #     rel_pos = np.array(json.load(f))
-    # pipeline.set_model_info("AbsPosVariable", "abs_pos", abs_pos, True)
-    # pipeline.fit_all_models(solver_params=solver_params)
-    # pipeline.compare_models("AbsPosVariable", "TimeVariableLength", 0.01)
+    pipeline.set_model_bounds("TimeVariableLength", bounds_t)
+    pipeline.set_model_bounds("AbsPosVariable", bounds_pos)
+    pipeline.set_model_bounds("RelPosVariable", bounds_pos)
+    pipeline.set_model_bounds("Const",  {"a_0":[10**-10, 1]})
+
+    with open("/Users/stevecharczynski/workspace/data/sheehan/lin_track_s1/trial_length.json", 'rb') as f:
+        trial_length = json.load(f)
+    pipeline.set_model_info("TimeVariableLength", "trial_length", trial_length)
+    pipeline.set_model_info("AbsPosVariable", "trial_length", trial_length)
+    pipeline.set_model_info("RelPosVariable", "trial_length", trial_length)
+
+    with open("/Users/stevecharczynski/workspace/data/sheehan/lin_track_s1/x_abs.json", 'rb') as f:
+        abs_pos = np.array(json.load(f))
+    with open("/Users/stevecharczynski/workspace/data/sheehan/lin_track_s1/x_rel.json", 'rb') as f:
+        rel_pos = np.array(json.load(f))
+    pipeline.set_model_info("AbsPosVariable", "abs_pos", abs_pos, True)
+    pipeline.set_model_info("RelPosVariable", "rel_pos", rel_pos, True)
+    pipeline.fit_all_models(solver_params=solver_params)
+    pipeline.compare_models("Const", "TimeVariableLength", 0.01)
 
 
 
-# run_script(range(11,12))
+run_script(range(11,12))
 if __name__ == "__main__":
     cell_range = sys.argv[-2:]
     cell_range = list(map(int, cell_range))

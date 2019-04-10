@@ -1,8 +1,8 @@
 import numpy as np
 from pyswarm import pso
 from model import Model
-# import autograd.numpy as np
-import numpy as np
+import autograd.numpy as np
+# import numpy as np
 
 
 
@@ -724,9 +724,19 @@ class AbsPosVariable(Model):
         self.x0 = [1e-5, 100, 100, 1e-5]
 
     def info_callback(self):
-        trial_lengths = self.info["trial_length"]
-        for ind, trial in enumerate(trial_lengths):
-            self.spikes[ind][trial:] = 0
+        if "trial_length" in self.info:
+            trial_lengths = self.info["trial_length"]
+            for ind, trial in enumerate(trial_lengths):
+                self.spikes[ind][trial:] = 0
+            self.info.pop("trial_length")
+        
+        if "abs_pos" in self.info:
+            pos = self.info["abs_pos"]
+            longest_trial = max(list(map(lambda x: len(x), pos)))
+            self.pos2 = np.zeros((pos.shape[0], longest_trial),dtype=float)
+            for trial in range(len(pos)):
+                self.pos2[trial][:len(pos[trial])] = (np.array(pos[trial], dtype=float))
+            self.info.pop("abs_pos")
 
     def objective(self, x):
 
@@ -739,10 +749,7 @@ class AbsPosVariable(Model):
     def model(self, x, plot=False):
         a, ut, st, o = x
         # self.pos = np.array(list(map(lambda x: np.array(x), self.info["abs_pos"][11])),dtype=float)
-        self.pos = np.array(self.info["abs_pos"])
-        self.pos2 = np.zeros((59,3993),dtype=float)
-        for trial in range(len(self.pos)):
-            self.pos2[trial][:len(self.pos[trial])] = (np.array(self.pos[trial], dtype=float))
+
         
         self.function = (
             (a * np.exp(-np.power(self.pos2 - ut, 2.) / (2 * np.power(st, 2.)))) + o)
@@ -760,9 +767,19 @@ class RelPosVariable(Model):
         self.x0 = [1e-5, 100, 100, 1e-5]
 
     def info_callback(self):
-        trial_lengths = self.info["trial_length"]
-        for ind, trial in enumerate(trial_lengths):
-            self.spikes[ind][trial:] = 0
+        if "trial_length" in self.info:
+            trial_lengths = self.info["trial_length"]
+            for ind, trial in enumerate(trial_lengths):
+                self.spikes[ind][trial:] = 0
+            self.info.pop("trial_length")
+
+        if "rel_pos" in self.info:
+            pos = self.info["rel_pos"]
+            longest_trial = max(list(map(lambda x: len(x), pos)))
+            self.pos2 = np.zeros((pos.shape[0],longest_trial), dtype=float)
+            for trial in range(len(pos)):
+                self.pos2[trial][:len(pos[trial])] = (np.array(pos[trial], dtype=float))
+            self.info.pop("rel_pos")
 
     def objective(self, x):
 
@@ -775,11 +792,7 @@ class RelPosVariable(Model):
     def model(self, x, plot=False):
         a, ut, st, o = x
         # self.pos = np.array(list(map(lambda x: np.array(x), self.info["abs_pos"][11])),dtype=float)
-        self.pos = np.array(self.info["rel_pos"])
-        self.pos2 = np.zeros((59,3993),dtype=float)
-        for trial in range(len(self.pos)):
-            self.pos2[trial][:len(self.pos[trial])] = (np.array(self.pos[trial], dtype=float))
-        
+
         self.function = (
             (a * np.exp(-np.power(self.pos2 - ut, 2.) / (2 * np.power(st, 2.)))) + o)
         return self.function
