@@ -215,7 +215,7 @@ class DataProcessor(object):
         spikes_binned = {}
         for cell in self.spikes:
             spikes_binned[cell] = np.zeros(
-                (self.num_trials[cell], total_bins))
+                (int(self.num_trials[cell]), total_bins))
             for trial_index, trial in enumerate(self.spikes[cell]):
                 if type(trial) is float or type(trial) is int:
                     trial = [trial]

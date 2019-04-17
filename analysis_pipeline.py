@@ -276,11 +276,13 @@ class AnalysisPipeline(object):
             p_value,
             len(max_model.param_names) - len(min_model.param_names)
         ))
-        outcome_dict = {cell:
-                        {max_model.__class__.__name__+"_"+min_model.__class__.__name__: outcome}}
-        util.save_data(data=outcome_dict,
-                            filename="model_comparisons",
-                            cell=cell)
+        # outcome_dict = {str(cell):
+        #                 {max_model.__class__.__name__+"_"+min_model.__class__.__name__: outcome}}
+        # util.save_data(data=outcome_dict,
+        #                     filename="model_comparisons",
+        #                     cell=cell)
+        comparison_name = max_model.__class__.__name__+"_"+min_model.__class__.__name__
+        util.update_comparisons(str(cell), comparison_name, outcome)
         print(outcome)
         cellplot.plot_comparison(
             self.data_processor.spikes_summed[cell],

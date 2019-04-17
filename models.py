@@ -3,6 +3,8 @@ from pyswarm import pso
 from model import Model
 import autograd.numpy as np
 # import numpy as np
+import numpy as rnp
+
 
 
 
@@ -692,17 +694,26 @@ class TimeVariableLength(Model):
         self.x0 = [1e-5, 100, 100, 1e-5]
 
     def info_callback(self):
-        trial_lengths = self.info["trial_length"]
-        for ind, trial in enumerate(trial_lengths):
-            self.spikes[ind][trial:] = 0
+        self.trial_lengths = self.info["trial_length"]
+        for ind, trial in enumerate(self.trial_lengths):
+            self.spikes[ind][trial:] = np.nan
 
     def objective(self, x):
 
         fun = self.model(x)
-        obj = np.sum(self.spikes * (-np.log(fun)) +
-                      (1 - self.spikes) * (-np.log(1 - (fun))))
-        
-        return obj
+        total = 0
+        for ind, trial in enumerate(self.spikes):
+            total+= np.sum(trial[:self.trial_lengths[ind]] * (-np.log(fun[:self.trial_lengths[ind]])) +
+                      (1 - trial[:self.trial_lengths[ind]]) * (-np.log(1 - (fun[:self.trial_lengths[ind]]))))
+
+        # l = lambda x: np.sum(self.spikes[x[0]][:self.trial_lengths[x[0]]] * (-np.log(fun[:self.trial_lengths[x[0]]])) +
+        #               (1 - self.spikes[x[0]][:self.trial_lengths[x[0]]]) * (-np.log(1 - (fun[:self.trial_lengths[x[0]]]))))
+        # obj = map(l, enumerate(self.trial_lengths))
+        # obj = np.sum(np.array(list(mapper)) * (-np.log(np.array(list(mapper2)))) +
+        #               (1 - np.array(list(mapper))) * (-np.log(1 - (np.array(list(mapper2))))))
+        # obj = total
+        return total
+        # return total
 
     def model(self, x, plot=False):
         a, ut, st, o = x
@@ -725,8 +736,8 @@ class AbsPosVariable(Model):
 
     def info_callback(self):
         if "trial_length" in self.info:
-            trial_lengths = self.info["trial_length"]
-            for ind, trial in enumerate(trial_lengths):
+            self.trial_lengths = self.info["trial_length"]
+            for ind, trial in enumerate(self.trial_lengths):
                 self.spikes[ind][trial:] = 0
             self.info.pop("trial_length")
         
@@ -741,14 +752,18 @@ class AbsPosVariable(Model):
     def objective(self, x):
 
         fun = self.model(x)
-        obj = np.sum(self.spikes * (-np.log(fun)) +
-                      (1 - self.spikes) * (-np.log(1 - (fun))))
-        
-        return obj
+        total = 0
+        for ind, trial in enumerate(self.spikes):
+                total+= np.sum(trial[:self.trial_lengths[ind]] * (-np.log(fun[ind, :self.trial_lengths[ind]])) +
+                            (1 - trial[:self.trial_lengths[ind]]) * (-np.log(1 - (fun[ind, :self.trial_lengths[ind]]))))
+
+        return total
 
     def model(self, x, plot=False):
         a, ut, st, o = x
         # self.pos = np.array(list(map(lambda x: np.array(x), self.info["abs_pos"][11])),dtype=float)
+        if plot:
+            return((a * np.exp(-np.power(self.t - ut, 2.) / (2 * np.power(st, 2.)))) + o)
 
         
         self.function = (
@@ -768,9 +783,9 @@ class RelPosVariable(Model):
 
     def info_callback(self):
         if "trial_length" in self.info:
-            trial_lengths = self.info["trial_length"]
-            for ind, trial in enumerate(trial_lengths):
-                self.spikes[ind][trial:] = 0
+            self.trial_lengths = self.info["trial_length"]
+            for ind, trial in enumerate(self.trial_lengths):
+                self.spikes[ind][trial:] = np.nan
             self.info.pop("trial_length")
 
         if "rel_pos" in self.info:
@@ -784,18 +799,54 @@ class RelPosVariable(Model):
     def objective(self, x):
 
         fun = self.model(x)
-        obj = np.sum(self.spikes * (-np.log(fun)) +
-                      (1 - self.spikes) * (-np.log(1 - (fun))))
-        
-        return obj
+        total = 0
+        for ind, trial in enumerate(self.spikes):
+                total+= np.sum(trial[:self.trial_lengths[ind]] * (-np.log(fun[ind, :self.trial_lengths[ind]])) +
+                            (1 - trial[:self.trial_lengths[ind]]) * (-np.log(1 - (fun[ind, :self.trial_lengths[ind]]))))
+
+        return total
 
     def model(self, x, plot=False):
         a, ut, st, o = x
-        # self.pos = np.array(list(map(lambda x: np.array(x), self.info["abs_pos"][11])),dtype=float)
+        if plot:
+            return((a * np.exp(-np.power(self.t - ut, 2.) / (2 * np.power(st, 2.)))) + o)
 
+        # self.pos = np.array(list(map(lambda x: np.array(x), self.info["abs_pos"][11])),dtype=float)
+        # self.function = np.array((map(lambda x: (a * np.exp(-np.power(self.pos2[x, :self.trial_lengths[x]] - ut, 2.) / (2 * np.power(st, 2.)))) + o, range(self.num_trials))))
         self.function = (
             (a * np.exp(-np.power(self.pos2 - ut, 2.) / (2 * np.power(st, 2.)))) + o)
         return self.function
 
     def pso_con(self, x):
         return 1 - (x[0] + x[3])
+
+class ConstVariable(Model):
+
+    def __init__(self, data):
+        super().__init__(data)
+        self.spikes = data['spikes']
+        self.param_names = ["a_0"]
+        self.x0 = [0.1]
+
+    def info_callback(self):
+        if "trial_length" in self.info:
+            self.trial_lengths = self.info["trial_length"]
+            for ind, trial in enumerate(self.trial_lengths):
+                self.spikes[ind][trial:] = np.nan
+            self.info.pop("trial_length")
+
+    def model(self, x, plot=False):
+        o = x
+        return o
+
+    def objective(self, x):
+
+        fun = self.model(x)
+        total = 0
+        for ind, trial in enumerate(self.spikes):
+                total+= np.sum(trial[:self.trial_lengths[ind]] * (-np.log(fun)) +
+                            (1 - trial[:self.trial_lengths[ind]]) * (-np.log(1 - (fun))))
+
+        return total
+
+
