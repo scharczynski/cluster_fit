@@ -801,8 +801,8 @@ class RelPosVariable(Model):
         fun = self.model(x)
         total = 0
         for ind, trial in enumerate(self.spikes):
-                total+= np.sum(trial[:self.trial_lengths[ind]] * (-np.log(fun[ind, :self.trial_lengths[ind]])) +
-                            (1 - trial[:self.trial_lengths[ind]]) * (-np.log(1 - (fun[ind, :self.trial_lengths[ind]]))))
+                total+= np.sum(trial[self.time_info[0][ind]:self.time_info[1][ind]] * (-np.log(fun[ind,self.time_info[0][ind]:self.time_info[1][ind]])) +
+                            (1 - trial[self.time_info[0][ind]:self.time_info[1][ind]]) * (-np.log(1 - (fun[ind,self.time_info[0][ind]:self.time_info[1][ind]]))))
 
         return total
 
@@ -828,12 +828,12 @@ class ConstVariable(Model):
         self.param_names = ["a_0"]
         self.x0 = [0.1]
 
-    def info_callback(self):
-        if "trial_length" in self.info:
-            self.trial_lengths = self.info["trial_length"]
-            for ind, trial in enumerate(self.trial_lengths):
-                self.spikes[ind][trial:] = np.nan
-            self.info.pop("trial_length")
+    # def info_callback(self):
+        # if "trial_length" in self.info:
+        #     self.trial_lengths = self.info["trial_length"]
+        #     for ind, trial in enumerate(self.trial_lengths):
+        #         self.spikes[ind][trial:] = np.nan
+        #     self.info.pop("trial_length")
 
     def model(self, x, plot=False):
         o = x
@@ -844,8 +844,8 @@ class ConstVariable(Model):
         fun = self.model(x)
         total = 0
         for ind, trial in enumerate(self.spikes):
-                total+= np.sum(trial[:self.trial_lengths[ind]] * (-np.log(fun)) +
-                            (1 - trial[:self.trial_lengths[ind]]) * (-np.log(1 - (fun))))
+                total+= np.sum(trial[self.time_info[0][ind]:self.time_info[1][ind]] * (-np.log(fun)) +
+                            (1 - trial[self.time_info[0][ind]:self.time_info[1][ind]]) * (-np.log(1 - (fun))))
 
         return total
 

@@ -71,7 +71,7 @@ class DataProcessor(object):
         if time_info is None:
             self.time_info = self._set_default_time()
         else:
-            self.time_info = time_info
+            self.time_info = list(zip(*time_info))
 
         self.spike_info = self.extract_spike_info()
         self.spikes_binned = self._bin_spikes()
@@ -146,7 +146,7 @@ class DataProcessor(object):
 
                 return {int(k): v for k, v in json.load(f, encoding="bytes").items()}
 
-        else:
+        else:   
             print("conditions.json not found")
             return None
 
@@ -173,7 +173,7 @@ class DataProcessor(object):
         spikes = self.spikes_binned
         summed_spikes = {}
         for cell in self.cell_range:
-            summed_spikes[cell] = np.sum(spikes[cell], 0)
+            summed_spikes[cell] = np.nansum(spikes[cell], 0)
         return summed_spikes
 
     def _sum_spikes_conditions(self, conditions):
@@ -210,20 +210,22 @@ class DataProcessor(object):
         """Bins spikes within the given time range into 1 ms bins.
 
         """
-        time_low, time_high = self.time_info[0], self.time_info[1]
-        total_bins = time_high - time_low
+        lower_bounds, upper_bounds = self.time_info
+        total_bins = int(max(upper_bounds)- min(lower_bounds))
         spikes_binned = {}
         for cell in self.spikes:
             spikes_binned[cell] = np.zeros(
                 (int(self.num_trials[cell]), total_bins))
             for trial_index, trial in enumerate(self.spikes[cell]):
+                time_low, time_high = lower_bounds[trial_index], upper_bounds[trial_index]
+                # total_bins = time_high - time_low
                 if type(trial) is float or type(trial) is int:
                     trial = [trial]
                 for value in trial:
                     if value <  time_high and value >= time_low:
                         spikes_binned[cell][trial_index][int(
                             value - time_low)] = 1
-
+                spikes_binned[cell][trial_index][upper_bounds[trial_index]:] = np.nan
         return spikes_binned
 
     def _associate_conditions(self, conditions):

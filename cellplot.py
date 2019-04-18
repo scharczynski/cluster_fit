@@ -4,7 +4,7 @@ import scipy.signal
 import os
 
 
-def plot_raster(spikes, time_info, condition=None, conditions=None):
+def plot_raster(spikes, shift, condition=None, conditions=None):
     """Plots raster of binned spike data.
 
     Parameters
@@ -25,7 +25,7 @@ def plot_raster(spikes, time_info, condition=None, conditions=None):
     else:
         scatter_data = np.nonzero(spikes.T)
     # scatter_data[0] = np.add(scatter_data[0], time_info[0])
-    plt.scatter(np.add(scatter_data[0], time_info[0]), scatter_data[1],
+    plt.scatter(np.add(scatter_data[0], shift), scatter_data[1],
                 c=[[0, 0, 0]], marker="o", s=1)
 
 def plot_spike_train(spike_train):
@@ -69,9 +69,9 @@ def plot_comparison(spikes, model_min, model_max, cell_no):
         Numeric label of cell, used for plot title.
 
     """
-    window = np.arange(
-        model_min.time_info[0],
-        model_min.time_info[1],
+    min_time = min(model_min.time_info[0])
+    max_time = max(model_max.time_info[1])
+    window = np.arange(min_time, max_time,
         1)
     fig = plt.figure()
     fig.suptitle("cell " + str(cell_no))
@@ -79,15 +79,15 @@ def plot_comparison(spikes, model_min, model_max, cell_no):
         "_" + model_max.__class__.__name__ + ".png"
 
     plt.subplot(2, 1, 1)
-    plot_fit(model_min)
+    plot_fit(model_min, window)
     plt.plot(window, smooth_spikes(
         spikes, model_max.num_trials), label="spike_train")
-    plot_fit(model_max)
+    plot_fit(model_max, window)
     plt.legend(loc="upper right")
 
     plt.subplot(2, 1, 2)
-    plot_raster(model_max.spikes, model_max.time_info)
-    plt.xlim(model_max.time_info[0], model_max.time_info[1])
+    plot_raster(model_max.spikes, min_time)
+    plt.xlim(min_time, max_time)
     fig.savefig(fig_name % cell_no)
 
 def plot_raster_spiketrain(summed_spikes, binned_spikes, time_info, cell_no):
@@ -111,7 +111,7 @@ def plot_raster_spiketrain(summed_spikes, binned_spikes, time_info, cell_no):
 
 
 
-def plot_fit(model):
+def plot_fit(model, window):
     """Plot parameter fit over region of interest.
 
     Parameters
@@ -120,10 +120,7 @@ def plot_fit(model):
         Model desired for plotting.
 
     """
-    window = np.arange(
-        model.time_info[0],
-        model.time_info[1],
-        1)
+
     fit = model.model(model.fit, plot=True)
     # try:
     #     plt.plot(window, fit, label=model.__class__.__name__)

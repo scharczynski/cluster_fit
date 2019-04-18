@@ -327,12 +327,14 @@ def run_script(cell_range):
 
     path_to_data = "/Users/stevecharczynski/workspace/data/sheehan/lin_track_s1"
     # path_to_data =  "/projectnb/ecog-eeg/stevechar/data/cromer"
-    time_info = [0, 3993]
+    with open("/Users/stevecharczynski/workspace/data/sheehan/lin_track_s1/trial_length.json", 'rb') as f:
+        trial_length = json.load(f)
+    time_info = list(zip(np.zeros(len(trial_length), dtype=int), trial_length))
     data_processor = DataProcessor(
         path_to_data, cell_range, time_info)
     n_t = 2.
     solver_params = {
-        "niter": 5,
+        "niter": 1,
         "stepsize": 1000,
         "interval": 10,
         "method": "TNC",
@@ -358,8 +360,7 @@ def run_script(cell_range):
     pipeline.set_model_bounds("RelPosVariable", bounds_pos)
     pipeline.set_model_bounds("ConstVariable",  {"a_0":[10**-10, 1]})
 
-    with open("/Users/stevecharczynski/workspace/data/sheehan/lin_track_s1/trial_length.json", 'rb') as f:
-        trial_length = json.load(f)
+
     pipeline.set_model_info("ConstVariable", "trial_length", trial_length)
     pipeline.set_model_info("TimeVariableLength", "trial_length", trial_length)
     pipeline.set_model_info("AbsPosVariable", "trial_length", trial_length)
@@ -421,7 +422,7 @@ def run_script(cell_range):
     # pipeline.compare_models("ConstVariable", "AbsPosVariable", 0.01)
 
 
-
+run_script(range(10,11))
 if __name__ == "__main__":
     cell_range = sys.argv[-2:]
     cell_range = list(map(int, cell_range))

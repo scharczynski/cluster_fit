@@ -72,8 +72,8 @@ class Model(object):
     def __init__(self, data):
         self.time_info = data['time_info']
         self.t = np.arange(
-            self.time_info[0],
-            self.time_info[1],
+            min(self.time_info[0]),
+            max(self.time_info[1]),
             1)
         self.num_trials = data['num_trials']
         self.bounds = None
