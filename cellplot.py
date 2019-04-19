@@ -69,8 +69,8 @@ def plot_comparison(spikes, model_min, model_max, cell_no):
         Numeric label of cell, used for plot title.
 
     """
-    min_time = min(model_min.time_info[0])
-    max_time = max(model_max.time_info[1])
+    min_time = min(model_min.time_info[:,0])
+    max_time = max(model_max.time_info[:,1])
     window = np.arange(min_time, max_time,
         1)
     fig = plt.figure()

@@ -71,10 +71,9 @@ class Model(object):
 
     def __init__(self, data):
         self.time_info = data['time_info']
-        self.t = np.arange(
-            min(self.time_info[0]),
-            max(self.time_info[1]),
-            1)
+        min_time = min(self.time_info[:,0])
+        max_time = max(self.time_info[:,1])
+        self.t = np.arange(min_time, max_time, 1)
         self.num_trials = data['num_trials']
         self.bounds = None
         self.x0 = None

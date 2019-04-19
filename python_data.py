@@ -71,7 +71,7 @@ class DataProcessor(object):
         if time_info is None:
             self.time_info = self._set_default_time()
         else:
-            self.time_info = list(zip(*time_info))
+            self.time_info = time_info
 
         self.spike_info = self.extract_spike_info()
         self.spikes_binned = self._bin_spikes()
@@ -210,7 +210,7 @@ class DataProcessor(object):
         """Bins spikes within the given time range into 1 ms bins.
 
         """
-        lower_bounds, upper_bounds = self.time_info
+        lower_bounds, upper_bounds = self.time_info[:,0], self.time_info[:,1]
         total_bins = int(max(upper_bounds)- min(lower_bounds))
         spikes_binned = {}
         for cell in self.spikes:
