@@ -56,7 +56,7 @@ class DataProcessor(object):
 
     """
 
-    def __init__(self, path, cell_range, time_info=None):
+    def __init__(self, path, cell_range):
         self.path = path
         self.cell_range = cell_range
         self.spikes = self._extract_spikes()
@@ -64,15 +64,14 @@ class DataProcessor(object):
         conditions = self._extract_conditions()
         if conditions is not None:
             # finds total number of different conditions in supplied file
-            self.num_conditions = len(set([item for sublist in list(conditions.values()) for item in sublist]))
+            self.num_conditions = len(
+                set([item for sublist in list(conditions.values()) for item in sublist]))
         self.conditions_dict = self._associate_conditions(conditions)
         # if time_info is not provided, a default window will be constructed
         # based off the min and max values found in the data
-        if time_info is None:
-            self.time_info = self._set_default_time()
-        else:
-            self.time_info = time_info
-
+        self.time_info = self._extract_trial_lengths()
+        # if self.time_info is None:
+        #     self.time_info = self._set_default_time()
         self.spike_info = self.extract_spike_info()
         self.spikes_binned = self._bin_spikes()
         self.spikes_summed = self._sum_spikes()
@@ -93,6 +92,15 @@ class DataProcessor(object):
                         min_time = t
         return [min_time, max_time]
 
+    def _extract_trial_lengths(self):
+        path = self.path + "/trial_lengths.json"
+        try:
+            with open(path, 'r') as f:
+                return np.array(json.load(f))
+        except:
+            print("trial_lengths.json not found")
+            return None
+
     def _extract_spikes(self):
         """Extracts spike times from data file.
 
@@ -112,6 +120,7 @@ class DataProcessor(object):
             print("Spikes folder not found.")
             raise FileNotFoundError(
                 errno.ENOENT, os.strerror(errno.ENOENT), self.path+"/spikes/")
+
         return spikes
 
     def _extract_num_trials(self):
@@ -146,8 +155,9 @@ class DataProcessor(object):
 
                 return {int(k): v for k, v in json.load(f, encoding="bytes").items()}
 
-        else:   
+        else:
             print("conditions.json not found")
+
             return None
 
     def extract_spike_info(self):
@@ -174,6 +184,7 @@ class DataProcessor(object):
         summed_spikes = {}
         for cell in self.cell_range:
             summed_spikes[cell] = np.nansum(spikes[cell], 0)
+
         return summed_spikes
 
     def _sum_spikes_conditions(self, conditions):
@@ -210,8 +221,8 @@ class DataProcessor(object):
         """Bins spikes within the given time range into 1 ms bins.
 
         """
-        lower_bounds, upper_bounds = self.time_info[:,0], self.time_info[:,1]
-        total_bins = int(max(upper_bounds)- min(lower_bounds))
+        lower_bounds, upper_bounds = self.time_info[:, 0], self.time_info[:, 1]
+        total_bins = int(max(upper_bounds) - min(lower_bounds))
         spikes_binned = {}
         for cell in self.spikes:
             spikes_binned[cell] = np.zeros(
@@ -222,10 +233,11 @@ class DataProcessor(object):
                 if type(trial) is float or type(trial) is int:
                     trial = [trial]
                 for value in trial:
-                    if value <  time_high and value >= time_low:
+                    if value < time_high and value >= time_low:
                         spikes_binned[cell][trial_index][int(
                             value - time_low)] = 1
                 spikes_binned[cell][trial_index][upper_bounds[trial_index]:] = np.nan
+
         return spikes_binned
 
     def _associate_conditions(self, conditions):
@@ -249,6 +261,7 @@ class DataProcessor(object):
                 for trial, condition in enumerate(cond):
                     if condition:
                         conditions_dict[cell][condition][trial] = 1
+
             return conditions_dict
 
     def save_attribute(self, attribute, filename, path=""):

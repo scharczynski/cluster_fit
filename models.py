@@ -2,10 +2,6 @@ import numpy as np
 from pyswarm import pso
 from model import Model
 import autograd.numpy as np
-# import numpy as np
-import numpy as rnp
-
-
 
 
 class Time(Model):
@@ -733,14 +729,13 @@ class AbsPosVariable(Model):
         self.spikes = data['spikes']
         self.param_names = ["a_1", "ut", "st", "a_0"]
         self.x0 = [1e-5, 100, 100, 1e-5]
-        self.trial_ub = self.time_info[:, 1]
 
     def info_callback(self):
-        # if "trial_length" in self.info:
-        #     self.trial_lengths = self.info["trial_length"]
-        #     for ind, trial in enumerate(self.trial_lengths):
-        #         self.spikes[ind][trial:] = 0
-        #     self.info.pop("trial_length")
+        if "trial_length" in self.info:
+            self.trial_lengths = self.info["trial_length"]
+            for ind, trial in enumerate(self.trial_lengths):
+                self.spikes[ind][trial:] = 0
+            self.info.pop("trial_length")
         
         if "abs_pos" in self.info:
             pos = self.info["abs_pos"]
@@ -755,8 +750,8 @@ class AbsPosVariable(Model):
         fun = self.model(x)
         total = 0
         for ind, trial in enumerate(self.spikes):
-                total+= np.sum(trial[:self.trial_ub[ind]] * (-np.log(fun[ind, :self.trial_ub[ind]])) +
-                            (1 - trial[:self.trial_ub[ind]]) * (-np.log(1 - (fun[ind, :self.trial_ub[ind]]))))
+                total+= np.sum(trial[self.time_info[ind, 0]:self.time_info[ind, 1]] * (-np.log(fun[ind,self.time_info[ind, 0]:self.time_info[ind, 1]])) +
+                            (1 - trial[self.time_info[ind, 0]:self.time_info[ind, 1]]) * (-np.log(1 - (fun[ind,self.time_info[ind, 0]:self.time_info[ind, 1]]))))
 
         return total
 
@@ -845,7 +840,7 @@ class ConstVariable(Model):
         fun = self.model(x)
         total = 0
         for ind, trial in enumerate(self.spikes):
-                total+= np.sum(trial[self.time_info[ind, 0]:self.time_info[ind, 1]] * (-np.log(fun)) +
+                total+= np.sum(trial[self.time_info[ind,0]:self.time_info[ind, 1]] * (-np.log(fun)) +
                             (1 - trial[self.time_info[ind,0]:self.time_info[ind, 1]]) * (-np.log(1 - (fun))))
 
         return total

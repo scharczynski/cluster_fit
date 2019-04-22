@@ -22,16 +22,19 @@ def plot_raster(spikes, shift, condition=None, conditions=None):
     """
     if condition:
         scatter_data = np.nonzero(spikes.T * conditions[condition].flatten())
+        
     else:
-        scatter_data = np.nonzero(spikes.T)
-    # scatter_data[0] = np.add(scatter_data[0], time_info[0])
+        scatter_data = np.where(spikes.T[:,:]==1)
     plt.scatter(np.add(scatter_data[0], shift), scatter_data[1],
-                c=[[0, 0, 0]], marker="o", s=1)
+                c="#000000", marker="o", s=1)
+    nan_pos = np.where(np.isnan(spikes.T[:,:]))
+    if len(nan_pos[0] > 0):
+        plt.scatter(np.add(nan_pos[0], shift), nan_pos[1],
+                c="#FFC0CB", marker="o", s=1)
 
 def plot_spike_train(spike_train):
 
     plt.plot(smooth_spikes(spike_train))
-
 
 def plot_cat_fit(model, cell_num, spikes, subsample=0):
     fig = plt.figure()
@@ -54,7 +57,6 @@ def plot_cat_fit(model, cell_num, spikes, subsample=0):
             plot_raster(model.spikes, [model.time_info[0], model.time_info[1]], condition, model.conditions)
 
     fig.savefig(fig_name % cell_num)
-
 
 def plot_comparison(spikes, model_min, model_max, cell_no):
     """Given two models, produces a comparison figure and saves to disk.
@@ -108,9 +110,6 @@ def plot_raster_spiketrain(summed_spikes, binned_spikes, time_info, cell_no):
     plt.xlim(time_info[0], time_info[1])
     fig.savefig(fig_name % cell_no)
 
-
-
-
 def plot_fit(model, window):
     """Plot parameter fit over region of interest.
 
@@ -122,17 +121,10 @@ def plot_fit(model, window):
     """
 
     fit = model.model(model.fit, plot=True)
-    # try:
-    #     plt.plot(window, fit, label=model.__class__.__name__)
-    # except:
-    #     if fit.size == 1:
-    #         plt.plot(window, np.full(model.t.shape, fit), label=model.__class__.__name__ )
     if fit.size == 1:
         plt.plot(window, np.full(model.t.shape, fit), label=model.__class__.__name__ )
     else:
         plt.plot(window, fit, label=model.__class__.__name__)
-
-
 
 def smooth_spikes(spikes, num_trials=0, subsample=0, condition=0):
     """Applys a gaussian blur filter to spike data.

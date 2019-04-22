@@ -379,13 +379,13 @@ def run_script(cell_range):
 
     path_to_data = "/Users/stevecharczynski/workspace/data/sheehan/lin_track_s1"
     # path_to_data =  "/projectnb/ecog-eeg/stevechar/data/cromer"
-    with open("/Users/stevecharczynski/workspace/data/sheehan/lin_track_s1/trial_length.json", 'rb') as f:
-        trial_length = json.load(f)
-    time_info = np.array(list(zip(np.zeros(len(trial_length), dtype=int), trial_length)))
-    with open("/Users/stevecharczynski/workspace/data/sheehan/lin_track_s1/trial_length_new.json", 'w') as f:
-        json.dump(time_info.tolist(), f)
+    # with open("/Users/stevecharczynski/workspace/data/sheehan/lin_track_s1/trial_length_old.json", 'rb') as f:
+    #     trial_length = json.load(f)
+    # time_info = np.array(list(zip(np.zeros(len(trial_length), dtype=int), trial_length)))
+    # with open("/Users/stevecharczynski/workspace/data/sheehan/lin_track_s1/trial_length_new.json", 'w') as f:
+    #     json.dump(time_info.tolist(), f)
     data_processor = DataProcessor(
-        path_to_data, cell_range, time_info)
+        path_to_data, cell_range)
     n_t = 2.
     solver_params = {
         "niter": 1,
@@ -411,9 +411,6 @@ def run_script(cell_range):
 
     pipeline.set_model_bounds("AbsPosVariable", bounds_pos)
     pipeline.set_model_bounds("ConstVariable",  {"a_0":[10**-10, 1]})
-
-    pipeline.set_model_info("ConstVariable", "trial_length", trial_length)
-    pipeline.set_model_info("AbsPosVariable", "trial_length", trial_length)
 
     with open("/Users/stevecharczynski/workspace/data/sheehan/lin_track_s1/x_abs.json", 'rb') as f:
         abs_pos = np.array(json.load(f))
