@@ -731,11 +731,11 @@ class AbsPosVariable(Model):
         self.x0 = [1e-5, 100, 100, 1e-5]
 
     def info_callback(self):
-        if "trial_length" in self.info:
-            self.trial_lengths = self.info["trial_length"]
-            for ind, trial in enumerate(self.trial_lengths):
-                self.spikes[ind][trial:] = 0
-            self.info.pop("trial_length")
+        # if "trial_length" in self.info:
+        #     self.trial_lengths = self.info["trial_length"]
+        #     for ind, trial in enumerate(self.trial_lengths):
+        #         self.spikes[ind][trial:] = 0
+        #     self.info.pop("trial_length")
         
         if "abs_pos" in self.info:
             pos = self.info["abs_pos"]
@@ -838,11 +838,32 @@ class ConstVariable(Model):
     def objective(self, x):
 
         fun = self.model(x)
+        # if True:
+        #     import numpy.ma as ma
+        #     spikes = ma.masked_array(self.spikes, self.filter_spikes())
+        #     return  np.sum(spikes * (-np.log(fun)) +
+        #               (1 - spikes) * (-np.log(1 - (fun))))
+        # test = {}
+        # for ind, trial in enumerate(self.spikes):
+        #     test[ind] = np.array(trial[self.time_info[ind,0]:self.time_info[ind, 1]])
+        # return (np.sum(test) * (-np.log(fun)) +
+        #               (1 - test) * (-np.log(1 - (fun)))))
         total = 0
         for ind, trial in enumerate(self.spikes):
                 total+= np.sum(trial[self.time_info[ind,0]:self.time_info[ind, 1]] * (-np.log(fun)) +
                             (1 - trial[self.time_info[ind,0]:self.time_info[ind, 1]]) * (-np.log(1 - (fun))))
 
         return total
+
+    def filter_spikes(self):
+        mask = np.zeros(self.spikes.shape)
+
+        
+        for ind, trial in enumerate(self.spikes):
+            
+            mask[ind][0:self.time_info[ind,0]] = 1
+            mask[ind][self.time_info[ind,1]:] = 1
+
+        return mask
 
 
