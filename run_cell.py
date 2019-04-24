@@ -223,14 +223,14 @@ def run_script(cell_range):
 
     # path_to_data = "/Users/stevecharczynski/workspace/data/cromer"
     path_to_data =  "/projectnb/ecog-eeg/stevechar/data/cromer"
-    with open(path_to_data+'/number_of_trials.json', 'r') as f:
-        num = json.load(f)
-    x = np.full(max(num), 400)
-    y = np.full(max(num), 2000)
+    # with open(path_to_data+'/number_of_trials.json', 'r') as f:
+    #     num = json.load(f)
+    # x = np.full(max(num), 400)
+    # y = np.full(max(num), 2000)
 
-    trial_lengths = np.array(list(zip(x,y)))
-    with open(path_to_data+'trial_lengths.json', 'w') as f:
-        json.dump(trial_lengths.tolist(), f)
+    # trial_lengths = np.array(list(zip(x,y)))
+    # with open(path_to_data+'/trial_lengths.json', 'w') as f:
+    #     json.dump(trial_lengths.tolist(), f)
     
     data_processor = DataProcessor(
         path_to_data, cell_range)
@@ -501,7 +501,7 @@ def run_script(cell_range):
 
 
 
-# run_script(range(10,13))
+# run_script(range(10,11))
 if __name__ == "__main__":
     cell_range = sys.argv[-2:]
     cell_range = list(map(int, cell_range))
