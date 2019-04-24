@@ -221,16 +221,17 @@ def run_script(cell_range):
     # pipeline.fit_all_models(1)
     # pipeline.compare_models("Const", "Time", 0.01)
 
-    path_to_data = "/Users/stevecharczynski/workspace/data/cromer"
-    with open('/Users/stevecharczynski/workspace/data/cromer/number_of_trials.json', 'r') as f:
+    # path_to_data = "/Users/stevecharczynski/workspace/data/cromer"
+    path_to_data =  "/projectnb/ecog-eeg/stevechar/data/cromer"
+    with open(path_to_data+'/number_of_trials.json', 'r') as f:
         num = json.load(f)
     x = np.full(max(num), 400)
     y = np.full(max(num), 2000)
 
     trial_lengths = np.array(list(zip(x,y)))
-    with open('/Users/stevecharczynski/workspace/data/cromer/trial_lengths.json', 'w') as f:
+    with open(path_to_data+'trial_lengths.json', 'w') as f:
         json.dump(trial_lengths.tolist(), f)
-    # path_to_data =  "/projectnb/ecog-eeg/stevechar/data/cromer"
+    
     data_processor = DataProcessor(
         path_to_data, cell_range)
     n_t = 2.
