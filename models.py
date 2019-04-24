@@ -848,12 +848,17 @@ class ConstVariable(Model):
         #     test[ind] = np.array(trial[self.time_info[ind,0]:self.time_info[ind, 1]])
         # return (np.sum(test) * (-np.log(fun)) +
         #               (1 - test) * (-np.log(1 - (fun)))))
+
+
         total = 0
         for ind, trial in enumerate(self.spikes):
                 total+= np.sum(trial[self.time_info[ind,0]:self.time_info[ind, 1]] * (-np.log(fun)) +
                             (1 - trial[self.time_info[ind,0]:self.time_info[ind, 1]]) * (-np.log(1 - (fun))))
 
         return total
+
+    def subselect_spikes(self, spikes):
+        return self.spikes[ind][self.time_info[ind,0]:self.time_info[ind, 1]]
 
     def filter_spikes(self):
         mask = np.zeros(self.spikes.shape)

@@ -236,7 +236,8 @@ class DataProcessor(object):
                     if value < time_high and value >= time_low:
                         spikes_binned[cell][trial_index][int(
                             value - time_low)] = 1
-                spikes_binned[cell][trial_index][upper_bounds[trial_index]:] = np.nan
+                if trial_index < self.num_trials[cell]:
+                    spikes_binned[cell][trial_index][upper_bounds[trial_index]:] = np.nan
 
         return spikes_binned
 
