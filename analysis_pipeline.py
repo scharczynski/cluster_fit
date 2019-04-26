@@ -112,8 +112,7 @@ class AnalysisPipeline(object):
 
         return num_trials, spikes_binned, conditions
 
-    @staticmethod
-    def _subsample_trials(num_trials, subsample):
+    def _subsample_trials(self, num_trials, subsample):
         """Randomly selects a percentage of total trials
 
         """
@@ -126,23 +125,61 @@ class AnalysisPipeline(object):
 
         return sampled_trials
 
-    def set_model_bounds(self, model, bounds):
+    def set_model_bounds(self, models, bounds):
         """Sets solver bounds for the given model for all cells.
 
         Parameters
         ----------
-        model : string
+        models : string
             String with same name as desired model.
 
         bounds : list of tuples of float
             List of lower and upper bounds for the solver.
 
         """
-        for cell in self.cell_range:
-            if model in self.model_dict:
-                self.model_dict[model][cell].set_bounds(bounds)
-            else:
-                raise ValueError("model does not match supplied models")
+        if type(models) is list:
+            assert len(models) == len(bounds)
+            for cell in self.cell_range:
+                for index, model in enumerate(models):
+                    if model in self.model_dict:
+                        self.model_dict[model][cell].set_bounds(bounds[index])
+                    else:
+                        raise ValueError("model does not match supplied models")
+        else:
+            for cell in self.cell_range:
+                if models in self.model_dict:
+                    self.model_dict[models][cell].set_bounds(bounds)
+                else:
+                    raise ValueError("model does not match supplied models")
+
+    def set_model_x0(self, models, x0):
+        """Sets model x0 for the given model for all cells.
+
+        Parameters
+        ----------
+        models : string
+            String with same name as desired model.
+
+        bounds : list of tuples of float
+            List of lower and upper bounds for the solver.
+
+        """
+        if type(models) is list:
+            assert len(models) == len(x0)
+            for cell in self.cell_range:
+                for index, model in enumerate(models):
+                    if model in self.model_dict:
+                        self.model_dict[model][cell].set_x0(x0[index])
+                    else:
+                        raise ValueError("model does not match supplied models")
+        else:
+            for cell in self.cell_range:
+                if model in self.model_dict:
+                    self.model_dict[model][cell].set_x0(x0)
+                else:
+                    raise ValueError("model does not match supplied models")
+
+        
 
         return True
 
@@ -168,7 +205,7 @@ class AnalysisPipeline(object):
         fits_even, fits_odd = {}, {}
         lls_even, lls_odd = {}, {}
         for cell in self.cell_range:
-            print(cell)
+            print("Fitting cell {0}".format(cell))
             fits_even[cell] = {}
             fits_odd[cell] = {}
             lls_even[cell], lls_odd[cell] = {}, {}
@@ -227,7 +264,7 @@ class AnalysisPipeline(object):
         cell_lls = {}
 
         for cell in self.cell_range:
-            print(cell)
+            print("Fitting cell {0}".format(cell))
             cell_fits[cell] = {}
             cell_lls[cell] = {}
             for model in self.model_dict:
@@ -236,7 +273,7 @@ class AnalysisPipeline(object):
                     raise ValueError(
                         "model \"{0}\" bounds not yet set".format(model))
 
-                print("fitting {0}".format(model))
+                print("Fitting {0}".format(model))
                 model_instance.fit_params(solver_params)
                 # Build dict for json dump, json requires list instead of ndarray
                 param_dict = {param: model_instance.fit.tolist()[index]
@@ -249,28 +286,28 @@ class AnalysisPipeline(object):
 
         return True
 
-    def _do_compare(self, model_min, model_max, cell, p_value):
+    def _do_compare(self, model_min_name, model_max_name, cell, p_value):
         """Runs likelhood ratio test.
 
         """
         try:
-            min_model = self.model_dict[model_min][cell]
+            min_model = self.model_dict[model_min_name][cell]
         except:
             raise NameError(
-                "Supplied model \"{0}\" has not been fit".format(model_min))
+                "Supplied model \"{0}\" has not been fit".format(model_min_name))
         try:
-            max_model = self.model_dict[model_max][cell]
+            max_model = self.model_dict[model_max_name][cell]
         except:
             raise NameError(
-                "Supplied model \"{0}\" has not been fit".format(model_max))
+                "Supplied model \"{0}\" has not been fit".format(model_max_name))
 
         if len(max_model.param_names) - len(min_model.param_names) < 1:
             raise ValueError(
                 "Supplied models appear to be uncomparable. min_model has same or greater # of parameters"
             )
 
-        print(min_model.fit)
-        print(max_model.fit)
+        print("{0} fit is: {1}".format(model_min_name, min_model.fit))
+        print("{0} fit is: {1}".format(model_max_name, max_model.fit))
         outcome = str(self.lr_test(
             min_model.fun,
             max_model.fun,
@@ -296,25 +333,25 @@ class AnalysisPipeline(object):
 
         return outcome
 
-    def compare_models(self, model_min, model_max, p_value):
+    def compare_models(self, model_min_name, model_max_name, p_value):
         """Runs likelihood ratio test on likelihoods from given nested model parameters then saves to disk.
 
         Parameters
         ----------
-        model_min : string
+        model_min_name : string
             Model chosen for comparison with lower number of parameters.
             Name must match implementation.
-        model_max : string
+        model_max_name : string
             Model chosen for comparison with greater number of parameters.
             Name must match implementation.
 
         """
         outcomes = {cell: self._do_compare(
-            model_min, model_max, cell, p_value) for cell in self.cell_range}
+            model_min_name, model_max_name, cell, p_value) for cell in self.cell_range}
 
         return True
 
-    def compare_even_odd(self, model_min, model_max, p_threshold):
+    def compare_even_odd(self, model_min_name, model_max_name, p_threshold):
         for cell in self.cell_range:
             oddpath = os.getcwd() + "/results/log_likelihoods_odd_{0}.json".format(cell)
             evenpath = os.getcwd() + "/results/log_likelihoods_even_{0}.json".format(cell)
@@ -329,13 +366,13 @@ class AnalysisPipeline(object):
                     "Even or odd log likelihoods not found"
                 )
                 
-            min_model = self.model_dict[model_min][cell]
-            max_model = self.model_dict[model_max][cell]
+            min_model = self.model_dict[model_min_name][cell]
+            max_model = self.model_dict[model_max_name][cell]
             delta_params = len(max_model.param_names) - len(min_model.param_names)
-            outcome_odd = self.lr_test(odd_ll[str(cell)][model_min], odd_ll[str(
-                cell)][model_max], p_threshold, delta_params)
-            outcome_even = self.lr_test(even_ll[str(cell)][model_min], even_ll[str(
-                cell)][model_max], p_threshold, delta_params)
+            outcome_odd = self.lr_test(odd_ll[str(cell)][model_min_name], odd_ll[str(
+                cell)][model_max_name], p_threshold, delta_params)
+            outcome_even = self.lr_test(even_ll[str(cell)][model_min_name], even_ll[str(
+                cell)][model_max_name], p_threshold, delta_params)
             maxname = max_model.__class__.__name__
             minname = min_model.__class__.__name__
             odd_dict = {cell:{maxname+"_"+minname: str(outcome_odd)}}
@@ -352,10 +389,6 @@ class AnalysisPipeline(object):
 
         Parameters
         ----------
-        model_min : Model
-            Model chosen for comparison with lower number of parameters.
-        model_max : Model
-            Model chosen for comparison with greater number of parameters.
         p_threshold : float
             Threshold of p value to accept model_max as better.
 

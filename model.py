@@ -98,7 +98,7 @@ class Model(object):
         if solver_params["use_jac"]:
             minimizer_kwargs = {"method":solver_params["method"], "bounds":self.bounds, "jac":autograd.jacobian(self.objective)}
         else:
-            minimizer_kwargs = {"method":solver_params["method"], "bounds":self.bounds, "jac":False}
+            minimizer_kwargs = {"method":solver_params["method"], "bounds":self.bounds, "jac":False, "options":{"disp":True}}
 
         second_pass_res = basinhopping(
             self.objective,
@@ -187,6 +187,11 @@ class Model(object):
         self.bounds = [bounds[x] for x in self.param_names]
         self.lb = [bounds[x][0] for x in self.param_names]
         self.ub = [bounds[x][1] for x in self.param_names]
+
+    def set_x0(self, x0):
+        if len(x0) != len(self.param_names):
+            raise AttributeError("Wrong number of initial parameter values supplied")
+        self.x0 =  x0
 
     def set_info(self, name, data):
         self.info[name] = data

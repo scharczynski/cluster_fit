@@ -2,6 +2,8 @@ import numpy as np
 from pyswarm import pso
 from model import Model
 import autograd.numpy as np
+import autograd.scipy.special as sse
+
 
 
 class Time(Model):
@@ -50,10 +52,10 @@ class SigmaMuTau(Model):
         super().__init__(data)
         self.spikes = data['spikes']
         self.param_names = ["sigma", "mu", "tau", "a_1", "a_0"]
-        self.x0 = [50, 500, 50, 1e-5, 1e-5]
+        self.x0 = [100, 5000, 0.001, 1e-5, 1e-5]
 
     def erfcx(self,x):
-        import autograd.scipy.special as sse
+        
         if x < 25:
             return sse.erfc(x) * np.exp(x*x)
         else:
@@ -68,13 +70,17 @@ class SigmaMuTau(Model):
 
         # print("in model---------")
         # print(x)
-        import autograd.scipy.special as sse
         s, m, tau, a_1, a_0 = x
-        vec_erfcx = np.vectorize(self.erfcx)
         # fun = a_1*(0.5*l*np.exp(0.5*l*(2*m+l*s*s-2*self.t))*vec_erfcx((m+l*np.power(s, 2.)-self.t)/(np.sqrt(2)*s))) + a_0
+        # vec = np.vectorize(self.erfcx)
         fun = a_1*np.exp(-0.5*(np.power((self.t-m)/s,2)))*(s/tau)*np.sqrt(np.pi/2)*(
             np.array(list(map(self.erfcx, (1/np.sqrt(2))*((s/tau)- (self.t-m)/s))))
         ) + a_0
+        # fun = a_1*np.exp(-0.5*(np.power((self.t-m)/s,2)))*(s/tau)*np.sqrt(np.pi/2)*(
+        #     vec((1/np.sqrt(2))*((s/tau)- (self.t-m)/s))
+        # ) + a_0
+ 
+        # fun = (tau/2)*np.exp((tau/2)*(2*m + tau*s**s - 2*self.t))*sse.erfc((m + tau*s*s - self.t)/1.4142135623730951*s)
         # fun = a_1*np.exp(-0.5*(np.power((self.t-m)/s,2)))*(s/tau)*np.sqrt(np.pi/2)*(
         #     vec_erfcx(1/np.sqrt(2)*((s/tau)- (self.t-m)/s))
         # ) + a_0

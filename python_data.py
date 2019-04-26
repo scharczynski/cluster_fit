@@ -56,7 +56,7 @@ class DataProcessor(object):
 
     """
 
-    def __init__(self, path, cell_range):
+    def __init__(self, path, cell_range, time_info=None):
         self.path = path
         self.cell_range = cell_range
         self.spikes = self._extract_spikes()
@@ -69,7 +69,13 @@ class DataProcessor(object):
         self.conditions_dict = self._associate_conditions(conditions)
         # if time_info is not provided, a default window will be constructed
         # based off the min and max values found in the data
-        self.time_info = self._extract_trial_lengths()
+        if time_info and len(time_info) == 2:
+            print("Time window provided. Assuming all trials are of equal length")
+            min_time = np.full(max(self.num_trials), time_info[0])
+            max_time = np.full(max(self.num_trials), time_info[1])
+            self.time_info = np.array(list(zip(min_time, max_time)))
+        elif not time_info:
+            self.time_info = self._extract_trial_lengths()
         # if self.time_info is None:
         #     self.time_info = self._set_default_time()
         self.spike_info = self.extract_spike_info()
@@ -152,8 +158,11 @@ class DataProcessor(object):
         # convert keys to int
         if os.path.exists(self.path + "/conditions.json"):
             with open(self.path + "/conditions.json", 'rb') as f:
-
-                return {int(k): v for k, v in json.load(f, encoding="bytes").items()}
+                loaded = json.load(f, encoding="bytes")
+                if type(loaded) is dict:
+                    return {int(k): v for k, v in loaded.items()}
+                if type(loaded) is list:
+                    return {int(k): v for k, v in enumerate(loaded)}
 
         else:
             print("conditions.json not found")
