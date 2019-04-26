@@ -235,11 +235,11 @@ class AnalysisPipeline(object):
                 fits_odd[cell][model_instance.__class__.__name__] = param_dict
                 lls_odd[cell][model_instance.__class__.__name__] = model_instance.fun
 
-            util.save_data(fits_even, "cell_fits_even", cell=cell)
-            util.save_data(lls_even, "log_likelihoods_even", cell=cell)
+            util.save_data({cell:fits_even[cell]}, "cell_fits_even", cell=cell)
+            util.save_data({cell:lls_even[cell]}, "log_likelihoods_even", cell=cell)
 
-            util.save_data(fits_odd, "cell_fits_odd", cell=cell)
-            util.save_data(lls_odd, "log_likelihoods_odd", cell=cell)
+            util.save_data({cell:fits_odd[cell]}, "cell_fits_odd", cell=cell)
+            util.save_data({cell:lls_odd[cell]}, "log_likelihoods_odd", cell=cell)
 
     def fit_all_models(self, solver_params=None):
         """Fits parameters for all models then saves to disk.
@@ -281,8 +281,8 @@ class AnalysisPipeline(object):
                 cell_fits[cell][model_instance.__class__.__name__] = param_dict
                 cell_lls[cell][model_instance.__class__.__name__] = model_instance.fun
 
-            util.save_data(cell_fits, "cell_fits", cell=cell)
-            util.save_data(cell_lls, "log_likelihoods", cell=cell)
+            util.save_data({cell:cell_fits[cell]}, "cell_fits", cell=cell)
+            util.save_data({cell:cell_lls[cell]}, "log_likelihoods", cell=cell)
 
         return True
 
@@ -377,12 +377,15 @@ class AnalysisPipeline(object):
             minname = min_model.__class__.__name__
             odd_dict = {cell:{maxname+"_"+minname: str(outcome_odd)}}
             even_dict = {cell:{maxname+"_"+minname: str(outcome_even)}}
-            util.save_data(data=odd_dict,
-                           filename="model_comparisons_odd",
-                           cell=cell)
-            util.save_data(data=even_dict,
-                           filename="model_comparisons_even",
-                           cell=cell)
+            comparison_name = max_model.__class__.__name__+"_"+min_model.__class__.__name__
+            util.update_comparisons(str(cell), comparison_name, odd_dict)
+            util.update_comparisons(str(cell), comparison_name, even_dict)
+            #     data=odd_dict,
+            #                filename="model_comparisons_odd",
+            #                cell=cell)
+            # util.update_comparisons(data=even_dict,
+            #                filename="model_comparisons_even",
+            #                cell=cell)
 
     def lr_test(self, ll_min, ll_max, p_threshold, delta_params):
         """Performs likelihood ratio test.

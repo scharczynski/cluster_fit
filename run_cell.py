@@ -11,8 +11,8 @@ import numpy as np
 
 def run_script(cell_range):
 
-    # path_to_data = '/Users/stevecharczynski/workspace/data/jay/2nd_file'
-    path_to_data = "/projectnb/ecog-eeg/stevechar/data/jay/"
+    path_to_data = '/Users/stevecharczynski/workspace/data/jay/2nd_file'
+    # path_to_data = "/projectnb/ecog-eeg/stevechar/data/jay"
     # x = np.full(95, 0)
     # y = np.full(95, 8000)
 
@@ -23,7 +23,7 @@ def run_script(cell_range):
         path_to_data, cell_range)
     n = 2
     solver_params = {
-        "niter": 250,
+        "niter": 2,
         "stepsize": 10000,
         "interval": 10,
         "method": "TNC",
@@ -555,7 +555,7 @@ def run_script(cell_range):
 
 
 
-# run_script(range(10,11))
+run_script(range(10,12))
 if __name__ == "__main__":
     cell_range = sys.argv[-2:]
     cell_range = list(map(int, cell_range))
