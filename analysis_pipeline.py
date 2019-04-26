@@ -83,12 +83,7 @@ class AnalysisPipeline(object):
                 # this creates an instance of class "model" in the module "models"
                 model_instance = getattr(models, model)(model_data)
                 model_dict[model][cell] = model_instance
-                # try:
-
-                # except:
-                #     raise NameError(
-                #         "Supplied model \"{0}\" does not exist".format(model))
-
+                
         return model_dict
 
     def _select_model_data(self, cell):
@@ -314,11 +309,6 @@ class AnalysisPipeline(object):
             p_value,
             len(max_model.param_names) - len(min_model.param_names)
         ))
-        # outcome_dict = {str(cell):
-        #                 {max_model.__class__.__name__+"_"+min_model.__class__.__name__: outcome}}
-        # util.save_data(data=outcome_dict,
-        #                     filename="model_comparisons",
-        #                     cell=cell)
         comparison_name = max_model.__class__.__name__+"_"+min_model.__class__.__name__
         util.update_comparisons(str(cell), comparison_name, outcome)
         print(outcome)
@@ -380,12 +370,6 @@ class AnalysisPipeline(object):
             comparison_name = max_model.__class__.__name__+"_"+min_model.__class__.__name__
             util.update_comparisons(str(cell), comparison_name, odd_dict)
             util.update_comparisons(str(cell), comparison_name, even_dict)
-            #     data=odd_dict,
-            #                filename="model_comparisons_odd",
-            #                cell=cell)
-            # util.update_comparisons(data=even_dict,
-            #                filename="model_comparisons_even",
-            #                cell=cell)
 
     def lr_test(self, ll_min, ll_max, p_threshold, delta_params):
         """Performs likelihood ratio test.
