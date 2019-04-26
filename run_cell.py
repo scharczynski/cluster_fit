@@ -23,9 +23,9 @@ def run_script(cell_range):
         path_to_data, cell_range)
     n = 2
     solver_params = {
-        "niter": 1,
+        "niter": 250,
         "stepsize": 10000,
-        "interval": 1,
+        "interval": 10,
         "method": "TNC",
         "use_jac": True,
     }
@@ -50,8 +50,10 @@ def run_script(cell_range):
     pipeline.set_model_bounds("Time", bounds_t)
     pipeline.set_model_bounds("Const", bounds_c)
     # pipeline.set_model_bounds("SigmaMuTau", bounds_smt)
+    pipeline.fit_even_odd(solver_params)
     pipeline.fit_all_models(solver_params=solver_params)
     pipeline.compare_models("Const", "Time", 0.01)
+    pipeline.compare_even_odd("Const", "Time", 0.01)
     # pipeline.compare_models("Time", "SigmaMuTau", 0.01)
 
     # path_to_data = '/Users/stevecharczynski/workspace/data/brincat_miller'
