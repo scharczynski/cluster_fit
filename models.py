@@ -1,5 +1,4 @@
 import numpy as np
-from pyswarm import pso
 from model import Model
 import autograd.numpy as np
 import autograd.scipy.special as sse
@@ -24,9 +23,9 @@ class Time(Model):
 
     def __init__(self, data):
         super().__init__(data)
-        self.spikes = data['spikes']
+        # self.spikes = data['spikes']
         self.param_names = ["a_1", "ut", "st", "a_0"]
-        self.x0 = [1e-5, 100, 100, 1e-5]
+        # self.x0 = [1e-5, 100, 100, 1e-5]
 
 
     def objective(self, x):
@@ -42,9 +41,6 @@ class Time(Model):
         self.function = (
             (a * np.exp(-np.power(self.t - ut, 2.) / (2 * np.power(st, 2.)))) + o)
         return self.function
-
-    def pso_con(self, x):
-        return 1 - (x[0] + x[3])
 
 class SigmaMuTau(Model):
 
@@ -109,9 +105,9 @@ class Const(Model):
 
     def __init__(self, data):
         super().__init__(data)
-        self.spikes = data['spikes']
+        # self.spikes = data['spikes']
         self.param_names = ["a_0"]
-        self.x0 = [0.1]
+        # self.x0 = [0.1]
 
     def model(self, x, plot=False):
         o = x

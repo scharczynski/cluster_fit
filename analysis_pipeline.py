@@ -25,24 +25,15 @@ class AnalysisPipeline(object):
         These must match the names used in "fit_x" methods.
     subsample : float
         Number signifying the percentage of trials to be used, 0 will use all trials.
-    swarm_params : dict of float
-        Dict containing parameters for the particle swarm algorithm. Has default values.
 
     Attributes
     ----------
     time_start : float
         Time keeping variable for diagnostic purposes.
     cell_range : range
-        Beginning and end cell to be analyzed, in range format.
+        Beginning and end cell to be analyzed, as a Range
     data_processor : DataProcessor
         Object returned by data processing module that includes all relevent cell data.
-    time_info : TimeInfo
-        Object that holds timing information including the beginning and end of the region
-        of interest and the time bin. All in seconds.
-    analysis_dict : dict (int: AnalyzeCell)
-        Dict containing model fits per cell as contained in AnalyzeCell objects.
-    model_fits : dict (str: dict (int: Model))
-        Nested dictionary containing all model fits, per model per cell.
     subsample : float
         Number signifying the percentage of trials to be used, 0 will use all trials.
     model_dict : dict of Model
@@ -50,13 +41,11 @@ class AnalysisPipeline(object):
 
     """
 
-    def __init__(self, cell_range, data_processor, models, subsample=0, split_trials=False):
+    def __init__(self, cell_range, data_processor, models, subsample=0):
         self.time_start = time.time()
         self.cell_range = cell_range
         self.data_processor = data_processor
         self.subsample = subsample
-        if split_trials:
-            self.model_dict_even = self._make_models(models, "even")
         self.model_dict = self._make_models(models)
 
     def _make_models(self, models_to_fit, even_odd=None):
@@ -83,10 +72,14 @@ class AnalysisPipeline(object):
                 # this creates an instance of class "model" in the module "models"
                 model_instance = getattr(models, model)(model_data)
                 model_dict[model][cell] = model_instance
-                
+
         return model_dict
 
     def _select_model_data(self, cell):
+        """Provides important data for model construction.
+        If Subsampling, data will also be subsampled.
+
+        """
         condition_data = self.data_processor.conditions_dict
         if self.subsample:
 
@@ -128,8 +121,8 @@ class AnalysisPipeline(object):
         models : string
             String with same name as desired model.
 
-        bounds : list of tuples of float
-            List of lower and upper bounds for the solver.
+        bounds : dict of list or list of dicts
+            Dict of lower and upper bounds for the solver, including param names.
 
         """
         if type(models) is list:
@@ -155,8 +148,8 @@ class AnalysisPipeline(object):
         models : string
             String with same name as desired model.
 
-        bounds : list of tuples of float
-            List of lower and upper bounds for the solver.
+        x0 : list or list of lists
+            List of initial state for given model params.
 
         """
         if type(models) is list:
@@ -174,11 +167,21 @@ class AnalysisPipeline(object):
                 else:
                     raise ValueError("model does not match supplied models")
 
-        
-
-        return True
-
     def set_model_info(self, model, name, data, per_cell=False):
+        """Sets model info attribute for all cells.
+
+        Parameters
+        ----------
+        model : string
+            String with same name as desired model.
+        name : string
+            Name for supplied data.
+        data : hashable object
+            Data to be supplied to model for processing.
+        per_cell : bool
+            Flag to be set true if input data has a per-cell structure.
+
+        """
         for cell in self.cell_range:
             if model in self.model_dict:
                 if per_cell:
@@ -188,15 +191,27 @@ class AnalysisPipeline(object):
             else:
                 raise ValueError("model does not match supplied models")
 
-        return True
-
     def _get_even_odd_trials(self, cell, even):
+        """Returns either even or odd subset of binned spikes.
+
+        """
         if even:
             return self.data_processor.spikes_binned[cell][::2]
         else:
             return self.data_processor.spikes_binned[cell][1::2]
 
     def fit_even_odd(self, solver_params=None):
+        """Fits even and odd trial parameters for all models then saves to disk.
+
+        Parameters
+        ----------
+        solver_params : dict
+            Dict of parameters for minimizer algorithm.
+
+        """
+        if self.subsample:
+            print("Splitting trials while also subsampling may lead to unsatisfactory results")
+
         fits_even, fits_odd = {}, {}
         lls_even, lls_odd = {}, {}
         for cell in self.cell_range:
@@ -241,9 +256,8 @@ class AnalysisPipeline(object):
 
         Parameters
         ----------
-        iterations : int
-            The number of iterations the solver must reach without likelihood improvement
-            before terminating. 
+        solver_params : dict
+            Dict of parameters for minimizer algorithm.
 
         """
         if not solver_params:
@@ -278,8 +292,6 @@ class AnalysisPipeline(object):
 
             util.save_data({cell:cell_fits[cell]}, "cell_fits", cell=cell)
             util.save_data({cell:cell_lls[cell]}, "log_likelihoods", cell=cell)
-
-        return True
 
     def _do_compare(self, model_min_name, model_max_name, cell, p_value):
         """Runs likelhood ratio test.
@@ -334,6 +346,8 @@ class AnalysisPipeline(object):
         model_max_name : string
             Model chosen for comparison with greater number of parameters.
             Name must match implementation.
+        p_value : float
+            Threshold for likelihood ratio test such that the nested model is considered better.
 
         """
         outcomes = {cell: self._do_compare(
@@ -342,6 +356,20 @@ class AnalysisPipeline(object):
         return True
 
     def compare_even_odd(self, model_min_name, model_max_name, p_threshold):
+        """Runs likelihood ratio test on even and odd trial's likelihoods from given nested model parameters then saves to disk.
+
+        Parameters
+        ----------
+        model_min_name : string
+            Model chosen for comparison with lower number of parameters.
+            Name must match implementation.
+        model_max_name : string
+            Model chosen for comparison with greater number of parameters.
+            Name must match implementation.
+        p_value : float
+            Threshold for likelihood ratio test such that the nested model is considered better.
+
+        """
         for cell in self.cell_range:
             oddpath = os.getcwd() + "/results/log_likelihoods_odd_{0}.json".format(cell)
             evenpath = os.getcwd() + "/results/log_likelihoods_even_{0}.json".format(cell)
@@ -376,12 +404,18 @@ class AnalysisPipeline(object):
 
         Parameters
         ----------
+        ll_min : float
+            Log likelihood of model with fewer params.
+        ll_max
+            Log likelihood of model with more params.
         p_threshold : float
             Threshold of p value to accept model_max as better.
+        delta_params : int
+            Difference in number of parameters in nested model.
 
         Returns
         -------
-        Boolean
+        bool
             True if test passes.
 
         """
@@ -392,6 +426,14 @@ class AnalysisPipeline(object):
         return p < p_threshold
 
     def show_condition_fit(self, model):
+        """Plots data and fits against provided conditions.
+
+        Parameters
+        ----------
+        model : str
+            Name of model
+
+        """
         for cell in self.cell_range:
             extracted_model = self.model_dict[model][cell]
 
@@ -399,7 +441,10 @@ class AnalysisPipeline(object):
                 extracted_model, cell, self.data_processor.spikes_summed_cat[cell], self.subsample)
             plt.show()
 
-    def show_rasters(self, save=False):
+    def show_rasters(self):
+        """Plots binned spike raster and saves to disk.
+
+        """
         for cell in self.cell_range:
 
             cellplot.plot_raster_spiketrain(

@@ -19,21 +19,19 @@ class DataProcessor(object):
     ----------
     path : str
         Path to data directory. Must contain a spikes subdirectory with spikes in ms.
-    time_info : TimeInfo
-        Object that holds timing information including the beginning and
+    time_info : ndarray
+        Array that holds timing information including the beginning and
         end of the region of interest and the time bin. All in milliseconds.
+        If not supplied, it is assumed that trial lengths are unequal and will be loaded from file.
     cell_range : range
         Beginning and end cell to be analyzed, in range format.
-    num_conditions : int
-        Integer signifying the number of experimental conditions in the
-        dataset. Conditions are information that exists on a per trial basis.
 
     Attributes
     ----------
     path : str
         Path to data directory. Must contain a spikes subdirectory with spikes in ms.
-    time_info : TimeInfo
-        Object that holds timing information including the beginning and
+    time_info : ndarray
+        Array that holds timing information including the beginning and
         end of the region of interest and the time bin. All in milliseconds.
     cell_range : range
         Beginning and end cell to be analyzed, in range format.
@@ -78,7 +76,7 @@ class DataProcessor(object):
             self.time_info = self._extract_trial_lengths()
         # if self.time_info is None:
         #     self.time_info = self._set_default_time()
-        self.spike_info = self.extract_spike_info()
+        self.spike_info = self._extract_spike_info()
         self.spikes_binned = self._bin_spikes()
         self.spikes_summed = self._sum_spikes()
         self.spikes_summed_cat = self._sum_spikes_conditions(conditions)
@@ -99,6 +97,9 @@ class DataProcessor(object):
         return [min_time, max_time]
 
     def _extract_trial_lengths(self):
+        """Extracts trial lengths from file.
+
+        """
         path = self.path + "/trial_lengths.json"
         try:
             with open(path, 'r') as f:
@@ -169,7 +170,10 @@ class DataProcessor(object):
 
             return None
 
-    def extract_spike_info(self):
+    def _extract_spike_info(self):
+        """Extracts spike info from file.
+
+        """
         if os.path.exists(self.path+"/spike_info.json"):
             with open(self.path + "/spike_info.json", 'rb') as f:
                 data = json.load(f)
