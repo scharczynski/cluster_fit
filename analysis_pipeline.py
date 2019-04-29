@@ -162,8 +162,8 @@ class AnalysisPipeline(object):
                         raise ValueError("model does not match supplied models")
         else:
             for cell in self.cell_range:
-                if model in self.model_dict:
-                    self.model_dict[model][cell].set_x0(x0)
+                if models in self.model_dict:
+                    self.model_dict[models][cell].set_x0(x0)
                 else:
                     raise ValueError("model does not match supplied models")
 
